@@ -43,13 +43,11 @@ func (s *OpenAIChatModel) Models() (modelsNames []string, err error) {
 }
 
 func processMessages(chat ...ChatMessage) (completion []openai.ChatCompletionMessageParamUnion) {
-	for _, message := range chat {
-		completion = append(
-			completion,
-			openai.FunctionMessage(
-				message.Role,
-				message.Content,
-			),
+	completion = make([]openai.ChatCompletionMessageParamUnion, len(chat))
+	for index, message := range chat {
+		completion[index] = openai.FunctionMessage(
+			message.Role,
+			message.Content,
 		)
 	}
 	return
