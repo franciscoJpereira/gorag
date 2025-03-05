@@ -4,8 +4,6 @@ import (
 	"context"
 
 	chromago "github.com/amikos-tech/chroma-go"
-	"github.com/amikos-tech/chroma-go/collection"
-	"github.com/amikos-tech/chroma-go/openai"
 	"github.com/amikos-tech/chroma-go/types"
 )
 
@@ -18,14 +16,16 @@ type BaseInterface interface {
 	//Adds data to a collection
 	AddDataToCollection(collection string, data []string) error
 	//Retrieves documents that are mos relevant to a certain query
-	Retrieve(query string) []string
+	Retrieve(from string, query string) []string
 }
 
 type ChromaKBOptions struct {
-	BasePath      string `json:"ChromaURL"`
-	EmbedderPath  string `json:"ModelURL"`
-	EmbedderModel string `json:"EmbeddModel"`
-	OpenAIAPIKey  string `json:"OpenAIKey"`
+	BasePath         string `json:"ChromaURL"`
+	EmbedderPath     string `json:"ModelURL"`
+	EmbedderModel    string `json:"EmbeddModel"`
+	OpenAIAPIKey     string `json:"OpenAIKey"`
+	DefaultEmbedding bool   `json:"DefaultEmbed"`
+	MaxResults       int    `json:"MaxResults"`
 }
 
 type ChromaKB struct {
@@ -50,18 +50,19 @@ func NewChromaKB(
 }
 
 func (c *ChromaKB) EmbeddFunction() (types.EmbeddingFunction, error) {
-	return openai.NewOpenAIEmbeddingFunction(
-		c.options.OpenAIAPIKey,
-		openai.WithBaseURL(c.options.EmbedderPath),
-		openai.WithModel(openai.EmbeddingModel(c.options.EmbedderModel)),
-	)
+	if c.options.DefaultEmbedding {
+		return types.NewConsistentHashEmbeddingFunction(), nil
+	}
+	return NewLmEmbeddFunction(c.options.EmbedderPath, c.options.EmbedderModel), nil
 }
 
 func (c *ChromaKB) CreateColletion(collectionName string) error {
-	_, err := c.client.NewCollection(
-		c.ctx,
-		collection.WithName(collectionName),
-	)
+	ef, err := c.EmbeddFunction()
+	if err != nil {
+		return err
+	}
+	_, err = c.client.CreateCollection(c.ctx, collectionName, map[string]interface{}{}, false, ef, types.L2)
+
 	return err
 }
 
@@ -93,6 +94,19 @@ func (c *ChromaKB) AddDataToCollection(collection string, data []string) error {
 	return nil
 }
 
-func (c *ChromaKB) Retrieve(query string) []string {
-	return nil
+func (c *ChromaKB) Retrieve(collection string, query string) []string {
+	embeddFunction, err := c.EmbeddFunction()
+	if err != nil {
+		return nil
+	}
+	db, err := c.client.GetCollection(c.ctx, collection, embeddFunction)
+	if err != nil {
+		return nil
+	}
+	results, err := db.Query(c.ctx, []string{query}, int32(c.options.MaxResults), nil, nil, nil)
+	if err != nil || len(results.Documents) == 0 {
+		return nil
+	}
+
+	return results.Documents[0]
 }
