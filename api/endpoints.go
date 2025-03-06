@@ -97,3 +97,47 @@ func SingleShotMessage(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, response)
 }
+
+// @Summary Send a new message to a chat
+// @Description Sends a message to a chat and creates it if needed
+// @Tags chat
+// @Param request body pkg.ChatInstruct true "Message to send to Chat"
+// @Accept json
+// @Produce json
+// @Success 200 {object} pkg.MessageResponse
+// @Failure 400 {string} string "Error sending message"
+// @Router /chat [post]
+func SendNewMessageToChat(c echo.Context) error {
+	rag, ok := c.Get(RAGKey).(*pkg.RAG)
+	if !ok {
+		return c.String(http.StatusInternalServerError, "RAG is not set")
+	}
+	var message pkg.ChatInstruct
+	if err := c.Bind(&message); err != nil {
+		return c.String(http.StatusBadRequest, err.Error())
+	}
+	response, err := rag.NewChatMessage(message)
+	if err != nil {
+		return c.String(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, response)
+}
+
+// @Summary Retrieves all available Chats
+// @Description Returns the names of all existing chats
+// @Tags chat
+// @Accept json
+// @produce json
+// @Success 200 {array} string
+// @Router /chat [get]
+func RetrieveAvailableChats(c echo.Context) error {
+	rag, ok := c.Get(RAGKey).(*pkg.RAG)
+	if !ok {
+		return c.String(http.StatusInternalServerError, "RAG is not set")
+	}
+	names, err := rag.ListChats()
+	if err != nil {
+		return c.String(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, names)
+}

@@ -4,6 +4,70 @@
         "contact": {}
     },
     "paths": {
+        "/chat": {
+            "get": {
+                "description": "Returns the names of all existing chats",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "chat"
+                ],
+                "summary": "Retrieves all available Chats",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Sends a message to a chat and creates it if needed",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "chat"
+                ],
+                "summary": "Send a new message to a chat",
+                "parameters": [
+                    {
+                        "description": "Message to send to Chat",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/pkg.ChatInstruct"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/pkg.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Error sending message",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/knowledge-base": {
             "get": {
                 "description": "Returns a list with the names of all available knwoledge bases",
@@ -142,6 +206,20 @@
         }
     },
     "definitions": {
+        "pkg.ChatInstruct": {
+            "type": "object",
+            "properties": {
+                "ChatName": {
+                    "type": "string"
+                },
+                "Message": {
+                    "$ref": "#/definitions/pkg.MessageInstruct"
+                },
+                "NewChat": {
+                    "type": "boolean"
+                }
+            }
+        },
         "pkg.KBAddDataInstruct": {
             "type": "object",
             "properties": {

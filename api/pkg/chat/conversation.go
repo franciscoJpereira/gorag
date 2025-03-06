@@ -31,7 +31,7 @@ func (c *Chat) update(
 	response apiinterface.ChatMessage,
 ) {
 	userChatMessage := apiinterface.ChatMessage{
-		Role:    "User",
+		Role:    "user",
 		Content: userMessage,
 	}
 	c.messages = append(c.messages, userChatMessage, response)
@@ -63,7 +63,6 @@ func (c *Chat) NewMessage(
 	message string,
 	chatClient apiinterface.ApiInterface,
 ) (response apiinterface.ChatMessage, err error) {
-
 	response, err = chatClient.Send(message, c.messages...)
 
 	c.update(

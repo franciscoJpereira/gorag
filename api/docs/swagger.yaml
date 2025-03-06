@@ -1,4 +1,13 @@
 definitions:
+  pkg.ChatInstruct:
+    properties:
+      ChatName:
+        type: string
+      Message:
+        $ref: '#/definitions/pkg.MessageInstruct'
+      NewChat:
+        type: boolean
+    type: object
   pkg.KBAddDataInstruct:
     properties:
       Create:
@@ -33,6 +42,48 @@ definitions:
 info:
   contact: {}
 paths:
+  /chat:
+    get:
+      consumes:
+      - application/json
+      description: Returns the names of all existing chats
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              type: string
+            type: array
+      summary: Retrieves all available Chats
+      tags:
+      - chat
+    post:
+      consumes:
+      - application/json
+      description: Sends a message to a chat and creates it if needed
+      parameters:
+      - description: Message to send to Chat
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/pkg.ChatInstruct'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pkg.MessageResponse'
+        "400":
+          description: Error sending message
+          schema:
+            type: string
+      summary: Send a new message to a chat
+      tags:
+      - chat
   /knowledge-base:
     get:
       consumes:

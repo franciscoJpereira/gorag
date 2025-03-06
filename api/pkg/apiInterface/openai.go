@@ -45,10 +45,14 @@ func (s *OpenAIChatModel) Models() (modelsNames []string, err error) {
 func processMessages(chat ...ChatMessage) (completion []openai.ChatCompletionMessageParamUnion) {
 	completion = make([]openai.ChatCompletionMessageParamUnion, len(chat))
 	for index, message := range chat {
-		completion[index] = openai.FunctionMessage(
-			message.Role,
-			message.Content,
-		)
+		var value openai.ChatCompletionMessageParamUnion
+		if message.Role == "user" {
+			value = openai.UserMessage(message.Content)
+		} else {
+			value = openai.SystemMessage(message.Content)
+		}
+
+		completion[index] = value
 	}
 	return
 }
@@ -58,7 +62,6 @@ func (s *OpenAIChatModel) Send(
 	message string,
 	chat ...ChatMessage,
 ) (response ChatMessage, err error) {
-
 	completion, err := s.chat.Chat.Completions.New(
 		s.ctx,
 		openai.ChatCompletionNewParams{

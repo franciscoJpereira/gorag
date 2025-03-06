@@ -140,5 +140,7 @@ func main() {
 	e.POST("/knowledge-base", AddDataToKB)
 	e.GET("/knowledge-base", GetAvailableKBs)
 	e.POST("/message", SingleShotMessage)
+	e.POST("/chat", SendNewMessageToChat)
+	e.GET("/chat", RetrieveAvailableChats)
 	e.Logger.Fatal(e.Start(":1323"))
 }
