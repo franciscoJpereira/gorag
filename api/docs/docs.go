@@ -16,6 +16,30 @@ const docTemplate = `{
     "basePath": "{{.BasePath}}",
     "paths": {
         "/knowledge-base": {
+            "get": {
+                "description": "Returns a list with the names of all available knwoledge bases",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "knowledge-base"
+                ],
+                "summary": "Get available Knowledge Bases",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
             "post": {
                 "description": "Add string data to a knwoledge base, it creates the KB if the flag is set",
                 "consumes": [

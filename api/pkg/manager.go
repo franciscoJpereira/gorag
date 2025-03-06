@@ -22,6 +22,10 @@ func (r *RAG) ListChats() ([]string, error) {
 	return r.ChatStore.ListChats()
 }
 
+func (r *RAG) ListKBs() ([]string, error) {
+	return r.Kb.ListCollections()
+}
+
 func (r *RAG) RetrieveChat(chatName string) (store.ChatHistory, error) {
 	return r.ChatStore.Get(chatName)
 }

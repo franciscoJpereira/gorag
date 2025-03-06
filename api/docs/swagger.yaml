@@ -34,6 +34,22 @@ info:
   contact: {}
 paths:
   /knowledge-base:
+    get:
+      consumes:
+      - application/json
+      description: Returns a list with the names of all available knwoledge bases
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              type: string
+            type: array
+      summary: Get available Knowledge Bases
+      tags:
+      - knowledge-base
     post:
       consumes:
       - application/json

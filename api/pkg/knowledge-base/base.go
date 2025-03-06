@@ -11,6 +11,8 @@ import (
 //because I only plan to use ChromaDB
 
 type BaseInterface interface {
+	//Lists all available collections
+	ListCollections() ([]string, error)
 	//Creates a new collection
 	CreateColletion(collectionName string) error
 	//Adds data to a collection
@@ -92,6 +94,18 @@ func (c *ChromaKB) AddDataToCollection(collection string, data []string) error {
 		return err
 	}
 	return nil
+}
+
+func (c *ChromaKB) ListCollections() ([]string, error) {
+	collections, err := c.client.ListCollections(c.ctx)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]string, len(collections))
+	for index, collection := range collections {
+		result[index] = collection.Name
+	}
+	return result, nil
 }
 
 func (c *ChromaKB) Retrieve(collection string, query string) []string {

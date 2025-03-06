@@ -7,6 +7,25 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// @Summary Get available Knowledge Bases
+// @Description Returns a list with the names of all available knwoledge bases
+// @Tags knowledge-base
+// @Accept json
+// @Produce json
+// @Success 200 {array} string
+// @Router /knowledge-base [get]
+func GetAvailableKBs(c echo.Context) error {
+	rag, ok := c.Get(RAGKey).(*pkg.RAG)
+	if !ok {
+		return c.String(http.StatusInternalServerError, "RAG us not set")
+	}
+	result, err := rag.ListKBs()
+	if err != nil {
+		return c.String(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, result)
+}
+
 // @Summary Create a new knowledge base
 // @Description Create a new knowledge base
 // @Tags knowledge-base
