@@ -53,3 +53,28 @@ func AddDataToKB(c echo.Context) error {
 	}
 	return c.NoContent(http.StatusOK)
 }
+
+// @Summary Send a one-shot message
+// @Description Send a one-shot message to get a response
+// @Tags chat
+// @Param request body pkg.MessageInstruct true "Message to send"
+// @Accept json
+// @Produce json
+// @Success 200 {object} pkg.MessageResponse
+// @Failure 400 {string} string "Error sending message"
+// @Router /message [post]
+func SingleShotMessage(c echo.Context) error {
+	rag, ok := c.Get(RAGKey).(*pkg.RAG)
+	if !ok {
+		return c.String(http.StatusInternalServerError, "RAG is not set")
+	}
+	var message pkg.MessageInstruct
+	if err := c.Bind(&message); err != nil {
+		return c.String(http.StatusBadRequest, "Invalid data")
+	}
+	response, err := rag.SingleShotMessage(message)
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "Error sending message")
+	}
+	return c.JSON(http.StatusOK, response)
+}

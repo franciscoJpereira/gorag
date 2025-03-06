@@ -10,6 +10,26 @@ definitions:
           type: string
         type: array
     type: object
+  pkg.MessageInstruct:
+    properties:
+      KB:
+        type: boolean
+      KBName:
+        type: string
+      Message:
+        type: string
+    type: object
+  pkg.MessageResponse:
+    properties:
+      Context:
+        items:
+          type: string
+        type: array
+      Query:
+        type: string
+      Response:
+        type: string
+    type: object
 info:
   contact: {}
 paths:
@@ -61,4 +81,30 @@ paths:
       summary: Create a new knowledge base
       tags:
       - knowledge-base
+  /message:
+    post:
+      consumes:
+      - application/json
+      description: Send a one-shot message to get a response
+      parameters:
+      - description: Message to send
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/pkg.MessageInstruct'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pkg.MessageResponse'
+        "400":
+          description: Error sending message
+          schema:
+            type: string
+      summary: Send a one-shot message
+      tags:
+      - chat
 swagger: "2.0"

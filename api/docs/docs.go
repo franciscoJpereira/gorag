@@ -86,6 +86,46 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/message": {
+            "post": {
+                "description": "Send a one-shot message to get a response",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "chat"
+                ],
+                "summary": "Send a one-shot message",
+                "parameters": [
+                    {
+                        "description": "Message to send",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/pkg.MessageInstruct"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/pkg.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Error sending message",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -103,6 +143,37 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                }
+            }
+        },
+        "pkg.MessageInstruct": {
+            "type": "object",
+            "properties": {
+                "KB": {
+                    "type": "boolean"
+                },
+                "KBName": {
+                    "type": "string"
+                },
+                "Message": {
+                    "type": "string"
+                }
+            }
+        },
+        "pkg.MessageResponse": {
+            "type": "object",
+            "properties": {
+                "Context": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "Query": {
+                    "type": "string"
+                },
+                "Response": {
+                    "type": "string"
                 }
             }
         }

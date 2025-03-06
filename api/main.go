@@ -138,5 +138,6 @@ func main() {
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 	e.POST("/knowledge-base/:KBName", CreateKB)
 	e.POST("/knowledge-base", AddDataToKB)
+	e.POST("/message", SingleShotMessage)
 	e.Logger.Fatal(e.Start(":1323"))
 }
