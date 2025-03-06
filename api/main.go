@@ -137,5 +137,6 @@ func main() {
 	e.Use(InjectRAG(rag))
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 	e.POST("/knowledge-base/:KBName", CreateKB)
+	e.POST("/knowledge-base", AddDataToKB)
 	e.Logger.Fatal(e.Start(":1323"))
 }

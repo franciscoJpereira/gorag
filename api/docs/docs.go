@@ -15,6 +15,43 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/knowledge-base": {
+            "post": {
+                "description": "Add string data to a knwoledge base, it creates the KB if the flag is set",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "knowledge-base"
+                ],
+                "summary": "Add data to a knowledge base",
+                "parameters": [
+                    {
+                        "description": "Data to add to the KB",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/pkg.KBAddDataInstruct"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "KB does not exist",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/knowledge-base/{KBName}": {
             "post": {
                 "description": "Create a new knowledge base",
@@ -46,6 +83,25 @@ const docTemplate = `{
                         "schema": {
                             "type": "string"
                         }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "pkg.KBAddDataInstruct": {
+            "type": "object",
+            "properties": {
+                "Create": {
+                    "type": "boolean"
+                },
+                "KBName": {
+                    "type": "string"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
                     }
                 }
             }

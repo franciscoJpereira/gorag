@@ -1,6 +1,43 @@
+definitions:
+  pkg.KBAddDataInstruct:
+    properties:
+      Create:
+        type: boolean
+      KBName:
+        type: string
+      data:
+        items:
+          type: string
+        type: array
+    type: object
 info:
   contact: {}
 paths:
+  /knowledge-base:
+    post:
+      consumes:
+      - application/json
+      description: Add string data to a knwoledge base, it creates the KB if the flag
+        is set
+      parameters:
+      - description: Data to add to the KB
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/pkg.KBAddDataInstruct'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: KB does not exist
+          schema:
+            type: string
+      summary: Add data to a knowledge base
+      tags:
+      - knowledge-base
   /knowledge-base/{KBName}:
     post:
       consumes:
