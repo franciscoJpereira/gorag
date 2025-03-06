@@ -4,7 +4,7 @@ import apiinterface "ragAPI/pkg/apiInterface"
 
 type Store interface {
 	// Lists all chat names available
-	List() ([]string, error)
+	ListChats() ([]string, error)
 	//Gets a specific chat from the store
 	Get(chatName string) (ChatHistory, error)
 	//Stores the history into the store again

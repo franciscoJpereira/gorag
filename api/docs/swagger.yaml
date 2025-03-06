@@ -1,0 +1,27 @@
+info:
+  contact: {}
+paths:
+  /knowledge-base/{KBName}:
+    post:
+      consumes:
+      - application/json
+      description: Create a new knowledge base
+      parameters:
+      - description: KBName
+        in: path
+        name: KBName
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: KB already exists
+          schema:
+            type: string
+      summary: Create a new knowledge base
+      tags:
+      - knowledge-base
+swagger: "2.0"

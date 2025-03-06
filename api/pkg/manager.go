@@ -19,7 +19,7 @@ type RAG struct {
 }
 
 func (r *RAG) ListChats() ([]string, error) {
-	return r.ChatStore.List()
+	return r.ChatStore.ListChats()
 }
 
 func (r *RAG) RetrieveChat(chatName string) (store.ChatHistory, error) {
