@@ -7,14 +7,13 @@ import (
 	"github.com/amikos-tech/chroma-go/types"
 )
 
-//I'll implement everything on the same file
-//because I only plan to use ChromaDB
-
+// I'll implement everything on the same file
+// because I only plan to use ChromaDB
 type BaseInterface interface {
 	//Lists all available collections
 	ListCollections() ([]string, error)
 	//Creates a new collection
-	CreateColletion(collectionName string) error
+	CreateCollection(collectionName string) error
 	//Adds data to a collection
 	AddDataToCollection(collection string, data []string) error
 	//Retrieves documents that are mos relevant to a certain query
@@ -58,7 +57,7 @@ func (c *ChromaKB) EmbeddFunction() (types.EmbeddingFunction, error) {
 	return NewLmEmbeddFunction(c.options.EmbedderPath, c.options.EmbedderModel), nil
 }
 
-func (c *ChromaKB) CreateColletion(collectionName string) error {
+func (c *ChromaKB) CreateCollection(collectionName string) error {
 	ef, err := c.EmbeddFunction()
 	if err != nil {
 		return err

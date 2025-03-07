@@ -41,7 +41,7 @@ func CreateKB(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, "RAG is not set")
 	}
 	collectionName := c.Param("KBName")
-	err := rag.Kb.CreateColletion(collectionName)
+	err := rag.Kb.CreateCollection(collectionName)
 	if err != nil {
 		return c.String(http.StatusBadRequest, "KB already exists")
 	}

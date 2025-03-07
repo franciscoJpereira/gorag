@@ -41,7 +41,7 @@ func TestChroma() {
 	if err != nil {
 		panic(err)
 	}
-	if err = chromadb.CreateColletion("TestingCollection"); err != nil {
+	if err = chromadb.CreateCollection("TestingCollection"); err != nil {
 		panic(fmt.Sprintf("Creating collection: %s", err))
 	}
 	if err = chromadb.AddDataToCollection("TestingCollection", []string{"South park es muy divertido", "Un cuento de sueños locos", "Un perro caminando por la calle no es bueno"}); err != nil {

@@ -31,7 +31,7 @@ func (r *RAG) RetrieveChat(chatName string) (store.ChatHistory, error) {
 }
 
 func (r *RAG) CreateKB(KBName string) error {
-	return r.Kb.CreateColletion(KBName)
+	return r.Kb.CreateCollection(KBName)
 }
 
 func (r *RAG) AddDataToKB(instruction KBAddDataInstruct) error {
