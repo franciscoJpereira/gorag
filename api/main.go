@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 	"path/filepath"
 	_ "ragAPI/docs"
 	"ragAPI/pkg"
@@ -14,84 +15,7 @@ import (
 	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
-func TestMessage(message string) {
-	service := apiinterface.NewOpenAIChatModel(
-		context.Background(),
-		"http://localhost:1234/v1/",
-		"deepseek-r1-distill-llama-8b@q6_k")
-	response, err := service.Send(message)
-	if err != nil {
-		fmt.Printf("Error: %s\n", err)
-	} else {
-		fmt.Printf("Response: %s\n", response.Content)
-	}
-	models, _ := service.Models()
-	fmt.Printf("Models: %v\n", models)
-}
-
-func TestChroma() {
-	chromaOptions := knowledgebase.ChromaKBOptions{
-		BasePath:      "http://localhost:8000",
-		EmbedderPath:  "http://localhost:1234/v1/embeddings",
-		EmbedderModel: "text-embedding-granite-embedding-278m-multilingual",
-		MaxResults:    10,
-	}
-	chromadb, err := knowledgebase.NewChromaKB(context.Background(), chromaOptions)
-	if err != nil {
-		panic(err)
-	}
-	if err = chromadb.CreateCollection("TestingCollection"); err != nil {
-		panic(fmt.Sprintf("Creating collection: %s", err))
-	}
-	if err = chromadb.AddDataToCollection("TestingCollection", []string{"South park es muy divertido", "Un cuento de sueños locos", "Un perro caminando por la calle no es bueno"}); err != nil {
-		panic(fmt.Sprintf("Adding data to collection: %s", err))
-	}
-	result := chromadb.Retrieve("TestingCollection", "Perros")
-	fmt.Println(result)
-}
-
-func SimpleRPL() {
-	chromaOptions := knowledgebase.ChromaKBOptions{
-		BasePath:      "http://localhost:8000",
-		EmbedderPath:  "http://localhost:1234/v1/embeddings",
-		EmbedderModel: "text-embedding-granite-embedding-278m-multilingual",
-		MaxResults:    10,
-	}
-	chromadb, err := knowledgebase.NewChromaKB(context.Background(), chromaOptions)
-	if err != nil {
-		panic(fmt.Sprintf("Creating chromadb: %s", err))
-	}
-	apiClient := apiinterface.NewOpenAIChatModel(
-		context.Background(),
-		"http://localhost:1234/v1/",
-		"deepseek-r1-distill-llama-8b@q6_k")
-	path, err := filepath.Abs("../store/")
-	if err != nil {
-		panic(fmt.Sprintf("Getting absolute path: %s", err))
-	}
-	chatStore, err := store.NewJsonStore(path)
-	if err != nil {
-		panic(fmt.Sprintf("Creating chat store: %s", err))
-	}
-	rag := pkg.RAG{
-		Kb:        chromadb,
-		Api:       apiClient,
-		ChatStore: chatStore,
-	}
-
-	for {
-		var message string
-		fmt.Scanln(&message)
-		r, err := rag.SingleShotMessage(pkg.MessageInstruct{
-			Message: message,
-		})
-		if err != nil {
-			fmt.Printf("Error: %s\n", err)
-		} else {
-			fmt.Printf("Response: %s\n", r)
-		}
-	}
-}
+const CONFIG_PATH = "./config/config.yaml"
 
 func InjectRAG(r *pkg.RAG) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
@@ -104,15 +28,29 @@ func InjectRAG(r *pkg.RAG) echo.MiddlewareFunc {
 
 func main() {
 	rag := &pkg.RAG{}
-	storePath, err := filepath.Abs("../store/")
+	configPath, err := filepath.Abs(CONFIG_PATH)
+	if err != nil {
+		panic(fmt.Sprintf("Getting config path: %s\n", err))
+	}
+	configFile, err := os.Open(configPath)
+	if err != nil {
+		panic(fmt.Sprintf("Opening config file: %s\n", err))
+	}
+	configT, err := pkg.GetConfiguration(configFile)
+	if err != nil {
+		panic(fmt.Sprintf("Parsing config file: %s\n", configT))
+	}
+
+	storePath, err := filepath.Abs(configT.GetStoreConfig())
 	if err != nil {
 		panic(fmt.Sprintf("Getting absolute path: %s", err))
 	}
 	e := echo.New()
+	modelUrl, modelName := configT.GetModelConfig()
 	rag.Api = apiinterface.NewOpenAIChatModel(
 		context.Background(),
-		"http://localhost:1234/v1/",
-		"deepseek-r1-distill-llama-8b@q6_k",
+		modelUrl,
+		modelName,
 	)
 	rag.ChatStore, err = store.NewJsonStore(storePath)
 	if err != nil {
@@ -120,12 +58,7 @@ func main() {
 	}
 	rag.Kb, err = knowledgebase.NewChromaKB(
 		context.Background(),
-		knowledgebase.ChromaKBOptions{
-			BasePath:      "http://localhost:8000",
-			EmbedderPath:  "http://localhost:1234/v1/embeddings",
-			EmbedderModel: "text-embedding-granite-embedding-278m-multilingual",
-			MaxResults:    10,
-		},
+		configT.GetChromaConfig(),
 	)
 
 	e.Use(InjectRAG(rag))
@@ -136,5 +69,5 @@ func main() {
 	e.POST("/message", pkg.SingleShotMessage)
 	e.POST("/chat", pkg.SendNewMessageToChat)
 	e.GET("/chat", pkg.RetrieveAvailableChats)
-	e.Logger.Fatal(e.Start(":1323"))
+	e.Logger.Fatal(e.Start(configT.GetServerConfig()))
 }

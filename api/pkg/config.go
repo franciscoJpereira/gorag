@@ -1,7 +1,9 @@
 package pkg
 
 import (
+	"fmt"
 	"io"
+	knowledgebase "ragAPI/pkg/knowledge-base"
 
 	"gopkg.in/yaml.v3"
 )
@@ -16,10 +18,11 @@ type EchoConfig struct {
 }
 
 type ChromaOptions struct {
-	BasePath      string `yaml:"base-url"`
-	EmbedderPath  string `yaml:"embedd-url"`
-	EmbedderModel string `yaml:"model"`
-	MaxResult     int    `yaml:"max-values"`
+	BasePath        string `yaml:"base-url"`
+	EmbedderPath    string `yaml:"embedd-url"`
+	EmbedderModel   string `yaml:"model"`
+	MaxResult       int    `yaml:"max-values"`
+	DefaultEmbedder bool   `yaml:"use-default"`
 }
 
 type ModelOptions struct {
@@ -44,5 +47,32 @@ func GetConfiguration(f io.Reader) (t T, err error) {
 	if err = decoder.Decode(&t); err != nil {
 		return
 	}
+	return
+}
+
+func (t T) GetChromaConfig() knowledgebase.ChromaKBOptions {
+	return knowledgebase.ChromaKBOptions{
+		BasePath:         t.Chroma.BasePath,
+		EmbedderPath:     t.Chroma.EmbedderPath,
+		EmbedderModel:    t.Chroma.EmbedderModel,
+		MaxResults:       t.Chroma.MaxResult,
+		DefaultEmbedding: t.Chroma.DefaultEmbedder,
+	}
+}
+
+func (t T) GetServerConfig() string {
+	url := ""
+	if t.Server.Local {
+		url = "127.0.0.1"
+	}
+	return fmt.Sprintf("%s:%s", url, t.Server.Port)
+}
+
+func (t T) GetStoreConfig() string {
+	return t.Store.StorePath
+}
+
+func (t T) GetModelConfig() (model string, modelurl string) {
+	model, modelurl = t.Model.Model, t.Model.ModelPath
 	return
 }
