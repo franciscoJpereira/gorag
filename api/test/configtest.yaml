@@ -1,0 +1,13 @@
+echo:
+  port: "1234"
+  local: true
+chroma:
+  base-url: "basepath"
+  embedd-url: "embedderpath"
+  model: "embeddermodel"
+  max-values: 10
+model:
+  model: "model"
+  model-url: "modelurl"
+store:
+  store-path: "storepath"

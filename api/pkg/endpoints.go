@@ -39,7 +39,7 @@ func GetAvailableKBs(c echo.Context) error {
 // @Failure 400 {string} string "KB already exists"
 // @Router /knowledge-base/{KBName} [post]
 func CreateKB(c echo.Context) error {
-	rag, ok := c.Get(RAGKey).(RAG)
+	rag, ok := c.Get(RAGKey).(*RAG)
 	if !ok {
 		return c.String(http.StatusInternalServerError, "RAG is not set")
 	}
@@ -61,7 +61,7 @@ func CreateKB(c echo.Context) error {
 // @Failure 400 {string} string "KB does not exist"
 // @Router /knowledge-base [post]
 func AddDataToKB(c echo.Context) error {
-	rag, ok := c.Get(RAGKey).(RAG)
+	rag, ok := c.Get(RAGKey).(*RAG)
 	if !ok {
 		return c.String(http.StatusInternalServerError, "RAG is not set")
 	}
@@ -86,7 +86,7 @@ func AddDataToKB(c echo.Context) error {
 // @Failure 400 {string} string "Error sending message"
 // @Router /message [post]
 func SingleShotMessage(c echo.Context) error {
-	rag, ok := c.Get(RAGKey).(RAG)
+	rag, ok := c.Get(RAGKey).(*RAG)
 	if !ok {
 		return c.String(http.StatusInternalServerError, "RAG is not set")
 	}
@@ -134,7 +134,7 @@ func SendNewMessageToChat(c echo.Context) error {
 // @Success 200 {array} string
 // @Router /chat [get]
 func RetrieveAvailableChats(c echo.Context) error {
-	rag, ok := c.Get(RAGKey).(RAG)
+	rag, ok := c.Get(RAGKey).(*RAG)
 	if !ok {
 		return c.String(http.StatusInternalServerError, "RAG is not set")
 	}
