@@ -1,4 +1,4 @@
-package main
+package pkg_test
 
 import (
 	"bytes"
@@ -65,8 +65,8 @@ func TestCreateKB(t *testing.T) {
 	c := e.NewContext(req, rec)
 	c.SetParamNames("KBName")
 	c.SetParamValues("newKB")
-	c.Set(RAGKey, rag)
-	if err := CreateKB(c); err != nil {
+	c.Set(pkg.RAGKey, rag)
+	if err := pkg.CreateKB(c); err != nil {
 		t.Fatalf("Failed witn error: %s\n", err)
 	}
 	if rec.Code != http.StatusOK {
@@ -78,8 +78,8 @@ func TestCreateKB(t *testing.T) {
 	c = e.NewContext(req, rec)
 	c.SetParamNames("KBName")
 	c.SetParamValues("newKB")
-	c.Set(RAGKey, rag)
-	if err := CreateKB(c); err != nil {
+	c.Set(pkg.RAGKey, rag)
+	if err := pkg.CreateKB(c); err != nil {
 		t.Fatalf("Double call created an error: %s\n", err)
 	}
 	if rec.Code != http.StatusBadRequest {
@@ -93,8 +93,8 @@ func TestGetAvailableKBs(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", strings.NewReader(""))
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
-	c.Set(RAGKey, rag)
-	if err := GetAvailableKBs(c); err != nil {
+	c.Set(pkg.RAGKey, rag)
+	if err := pkg.GetAvailableKBs(c); err != nil {
 		t.Fatalf("First request failed with err: %s\n", err)
 	}
 	if rec.Code != http.StatusOK {
@@ -110,8 +110,8 @@ func TestGetAvailableKBs(t *testing.T) {
 	rag.CreateKB("KB1")
 	rec = httptest.NewRecorder()
 	c = e.NewContext(req, rec)
-	c.Set(RAGKey, rag)
-	if err := GetAvailableKBs(c); err != nil {
+	c.Set(pkg.RAGKey, rag)
+	if err := pkg.GetAvailableKBs(c); err != nil {
 		t.Fatalf("Second request failed with err: %s\n", err)
 	}
 	if rec.Code != http.StatusOK {
@@ -145,8 +145,8 @@ func TestAddDataToKB(t *testing.T) {
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
-	c.Set(RAGKey, rag)
-	if err := AddDataToKB(c); err != nil {
+	c.Set(pkg.RAGKey, rag)
+	if err := pkg.AddDataToKB(c); err != nil {
 		t.Fatalf("Failed calling method: %s\n", err)
 	}
 	if rec.Code != http.StatusOK {
@@ -162,8 +162,8 @@ func TestAddDataToKB(t *testing.T) {
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec = httptest.NewRecorder()
 	c = e.NewContext(req, rec)
-	c.Set(RAGKey, rag)
-	if err := AddDataToKB(c); err != nil {
+	c.Set(pkg.RAGKey, rag)
+	if err := pkg.AddDataToKB(c); err != nil {
 		t.Fatalf("Failed calling method 2: %s\n", err)
 	}
 	if rec.Code != http.StatusOK {
@@ -186,8 +186,8 @@ func TestSingleShotMessageWithoutContext(t *testing.T) {
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	e := echo.New()
 	c := e.NewContext(req, rec)
-	c.Set(RAGKey, rag)
-	if err := SingleShotMessage(c); err != nil {
+	c.Set(pkg.RAGKey, rag)
+	if err := pkg.SingleShotMessage(c); err != nil {
 		t.Fatalf("Failed message: %s\n", err)
 	}
 	var response pkg.MessageResponse
@@ -217,8 +217,8 @@ func TestSingleShotMessageWithContext(t *testing.T) {
 	c := e.NewContext(req, rec)
 	rag.CreateKB("KB1")
 	rag.Kb.AddDataToCollection("KB1", []string{"Context data"})
-	c.Set(RAGKey, rag)
-	if err := SingleShotMessage(c); err != nil {
+	c.Set(pkg.RAGKey, rag)
+	if err := pkg.SingleShotMessage(c); err != nil {
 		t.Fatalf("Failed single shot message: %s\n", err)
 	}
 	var response pkg.MessageResponse
@@ -251,8 +251,8 @@ func TestCreateChat(t *testing.T) {
 	rec := httptest.NewRecorder()
 	e := echo.New()
 	c := e.NewContext(req, rec)
-	c.Set(RAGKey, rag)
-	if err := SendNewMessageToChat(c); err != nil {
+	c.Set(pkg.RAGKey, rag)
+	if err := pkg.SendNewMessageToChat(c); err != nil {
 		t.Fatalf("Failed call to function: %s\n", err)
 	}
 	if rec.Code != http.StatusOK {
@@ -286,8 +286,8 @@ func TestNewMessageToExistingChat(t *testing.T) {
 	rec := httptest.NewRecorder()
 	e := echo.New()
 	c := e.NewContext(req, rec)
-	c.Set(RAGKey, rag)
-	if err := SendNewMessageToChat(c); err != nil {
+	c.Set(pkg.RAGKey, rag)
+	if err := pkg.SendNewMessageToChat(c); err != nil {
 		t.Fatalf("Failed sending message to Chat: %s\n", err)
 	}
 	if rec.Code != http.StatusOK {
@@ -303,8 +303,8 @@ func TestNoChatRetrieval(t *testing.T) {
 	rec := httptest.NewRecorder()
 	e := echo.New()
 	c := e.NewContext(req, rec)
-	c.Set(RAGKey, rag)
-	if err := RetrieveAvailableChats(c); err != nil {
+	c.Set(pkg.RAGKey, rag)
+	if err := pkg.RetrieveAvailableChats(c); err != nil {
 		t.Fatalf("Failed retrieving chat: %s\n", err)
 	}
 	if rec.Code != http.StatusOK {
@@ -328,8 +328,8 @@ func TestMultipleChatRetrieval(t *testing.T) {
 	rec := httptest.NewRecorder()
 	e := echo.New()
 	c := e.NewContext(req, rec)
-	c.Set(RAGKey, rag)
-	if err := RetrieveAvailableChats(c); err != nil {
+	c.Set(pkg.RAGKey, rag)
+	if err := pkg.RetrieveAvailableChats(c); err != nil {
 		t.Fatalf("Failed retrieving chat: %s\n", err)
 	}
 	if rec.Code != http.StatusOK {

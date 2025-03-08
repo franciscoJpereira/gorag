@@ -1,10 +1,13 @@
-package main
+package pkg
 
 import (
 	"net/http"
-	"ragAPI/pkg"
 
 	"github.com/labstack/echo/v4"
+)
+
+const (
+	RAGKey = "Rag"
 )
 
 // @Summary Get available Knowledge Bases
@@ -15,7 +18,7 @@ import (
 // @Success 200 {array} string
 // @Router /knowledge-base [get]
 func GetAvailableKBs(c echo.Context) error {
-	rag, ok := c.Get(RAGKey).(*pkg.RAG)
+	rag, ok := c.Get(RAGKey).(*RAG)
 	if !ok {
 		return c.String(http.StatusInternalServerError, "RAG us not set")
 	}
@@ -36,7 +39,7 @@ func GetAvailableKBs(c echo.Context) error {
 // @Failure 400 {string} string "KB already exists"
 // @Router /knowledge-base/{KBName} [post]
 func CreateKB(c echo.Context) error {
-	rag, ok := c.Get(RAGKey).(*pkg.RAG)
+	rag, ok := c.Get(RAGKey).(RAG)
 	if !ok {
 		return c.String(http.StatusInternalServerError, "RAG is not set")
 	}
@@ -58,11 +61,11 @@ func CreateKB(c echo.Context) error {
 // @Failure 400 {string} string "KB does not exist"
 // @Router /knowledge-base [post]
 func AddDataToKB(c echo.Context) error {
-	rag, ok := c.Get(RAGKey).(*pkg.RAG)
+	rag, ok := c.Get(RAGKey).(RAG)
 	if !ok {
 		return c.String(http.StatusInternalServerError, "RAG is not set")
 	}
-	var instruction pkg.KBAddDataInstruct
+	var instruction KBAddDataInstruct
 	if err := c.Bind(&instruction); err != nil {
 		return c.String(http.StatusBadRequest, "Invalid data")
 	}
@@ -83,11 +86,11 @@ func AddDataToKB(c echo.Context) error {
 // @Failure 400 {string} string "Error sending message"
 // @Router /message [post]
 func SingleShotMessage(c echo.Context) error {
-	rag, ok := c.Get(RAGKey).(*pkg.RAG)
+	rag, ok := c.Get(RAGKey).(RAG)
 	if !ok {
 		return c.String(http.StatusInternalServerError, "RAG is not set")
 	}
-	var message pkg.MessageInstruct
+	var message MessageInstruct
 	if err := c.Bind(&message); err != nil {
 		return c.String(http.StatusBadRequest, "Invalid data")
 	}
@@ -108,11 +111,11 @@ func SingleShotMessage(c echo.Context) error {
 // @Failure 400 {string} string "Error sending message"
 // @Router /chat [post]
 func SendNewMessageToChat(c echo.Context) error {
-	rag, ok := c.Get(RAGKey).(*pkg.RAG)
+	rag, ok := c.Get(RAGKey).(*RAG)
 	if !ok {
 		return c.String(http.StatusInternalServerError, "RAG is not set")
 	}
-	var message pkg.ChatInstruct
+	var message ChatInstruct
 	if err := c.Bind(&message); err != nil {
 		return c.String(http.StatusBadRequest, err.Error())
 	}
@@ -131,7 +134,7 @@ func SendNewMessageToChat(c echo.Context) error {
 // @Success 200 {array} string
 // @Router /chat [get]
 func RetrieveAvailableChats(c echo.Context) error {
-	rag, ok := c.Get(RAGKey).(*pkg.RAG)
+	rag, ok := c.Get(RAGKey).(RAG)
 	if !ok {
 		return c.String(http.StatusInternalServerError, "RAG is not set")
 	}

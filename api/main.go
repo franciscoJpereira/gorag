@@ -4,12 +4,11 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
+	_ "ragAPI/docs"
 	"ragAPI/pkg"
 	apiinterface "ragAPI/pkg/apiInterface"
 	"ragAPI/pkg/chat/store"
 	knowledgebase "ragAPI/pkg/knowledge-base"
-
-	_ "ragAPI/docs"
 
 	"github.com/labstack/echo/v4"
 	echoSwagger "github.com/swaggo/echo-swagger"
@@ -94,21 +93,16 @@ func SimpleRPL() {
 	}
 }
 
-const RAGKey = "RAG"
-
 func InjectRAG(r *pkg.RAG) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			c.Set(RAGKey, r)
+			c.Set(pkg.RAGKey, r)
 			return next(c)
 		}
 	}
 }
 
 func main() {
-	//TestMessage("Hello there!")
-	//TestChroma()
-	//SimpleRPL()
 	rag := &pkg.RAG{}
 	storePath, err := filepath.Abs("../store/")
 	if err != nil {
@@ -136,11 +130,11 @@ func main() {
 
 	e.Use(InjectRAG(rag))
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
-	e.POST("/knowledge-base/:KBName", CreateKB)
-	e.POST("/knowledge-base", AddDataToKB)
-	e.GET("/knowledge-base", GetAvailableKBs)
-	e.POST("/message", SingleShotMessage)
-	e.POST("/chat", SendNewMessageToChat)
-	e.GET("/chat", RetrieveAvailableChats)
+	e.POST("/knowledge-base/:KBName", pkg.CreateKB)
+	e.POST("/knowledge-base", pkg.AddDataToKB)
+	e.GET("/knowledge-base", pkg.GetAvailableKBs)
+	e.POST("/message", pkg.SingleShotMessage)
+	e.POST("/chat", pkg.SendNewMessageToChat)
+	e.GET("/chat", pkg.RetrieveAvailableChats)
 	e.Logger.Fatal(e.Start(":1323"))
 }
