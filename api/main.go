@@ -38,7 +38,7 @@ func main() {
 	}
 	configT, err := pkg.GetConfiguration(configFile)
 	if err != nil {
-		panic(fmt.Sprintf("Parsing config file: %s\n", configT))
+		panic(fmt.Sprintf("Parsing config file: %s\n", err))
 	}
 
 	storePath, err := filepath.Abs(configT.GetStoreConfig())
@@ -69,5 +69,6 @@ func main() {
 	e.POST("/message", pkg.SingleShotMessage)
 	e.POST("/chat", pkg.SendNewMessageToChat)
 	e.GET("/chat", pkg.RetrieveAvailableChats)
+
 	e.Logger.Fatal(e.Start(configT.GetServerConfig()))
 }
