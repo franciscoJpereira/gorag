@@ -28,6 +28,7 @@ func (lc *LocalControler) callMethod(method echo.HandlerFunc, data any, params m
 		return
 	}
 	req, err := http.NewRequest(http.MethodGet, "/", bytes.NewBuffer(m))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	if err != nil {
 		return
 	}

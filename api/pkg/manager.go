@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"fmt"
 	apiinterface "ragAPI/pkg/apiInterface"
 	"ragAPI/pkg/chat"
 	"ragAPI/pkg/chat/store"
@@ -35,6 +36,7 @@ func (r *RAG) CreateKB(KBName string) error {
 }
 
 func (r *RAG) AddDataToKB(instruction KBAddDataInstruct) error {
+	fmt.Println("Here here")
 	if instruction.Create {
 		if err := r.CreateKB(instruction.KBName); err != nil {
 			return err
