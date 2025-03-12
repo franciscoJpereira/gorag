@@ -19,17 +19,19 @@ type ChatNameSetup struct {
 }
 
 type ChatFirstMessageSetup struct {
-	rag      *localnet.LocalControler
-	header   ChatHeader
-	message  string
-	loading  bool
-	spinType spinner.Model
-	loadChat chan any
+	rag          *localnet.LocalControler
+	header       ChatHeader
+	message      string
+	loading      bool
+	spinType     spinner.Model
+	loadChat     chan any
+	isSingleShot bool
 }
 
 func NewFirstMessageSetup(
 	rag *localnet.LocalControler,
 	chatName string,
+	singleShot bool,
 ) ChatFirstMessageSetup {
 
 	return ChatFirstMessageSetup{
@@ -42,6 +44,7 @@ func NewFirstMessageSetup(
 			spinner.WithStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("#00ff00"))),
 		),
 		nil,
+		singleShot,
 	}
 }
 
@@ -64,7 +67,7 @@ func (c ChatNameSetup) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return c, tea.Quit
 		case "enter":
 			//Return a new Chat instance
-			return NewFirstMessageSetup(c.rag, c.chatName), nil
+			return NewFirstMessageSetup(c.rag, c.chatName, false), nil
 		case tea.KeyBackspace.String():
 			if len(c.chatName) == 0 {
 				break
@@ -85,23 +88,40 @@ func (c ChatFirstMessageSetup) Init() tea.Cmd {
 	return nil
 }
 
+func (c ChatFirstMessageSetup) SingleShotMessage() {
+	response, err := c.rag.SingleShotMessage(pkg.MessageInstruct{
+		Message: c.message,
+	},
+	)
+	if err != nil {
+		c.loadChat <- err
+	} else {
+		c.loadChat <- response
+	}
+}
+
+func (c ChatFirstMessageSetup) NewChatMessage() {
+	response, err := c.rag.SendNewMessageToChat(pkg.ChatInstruct{
+		Message: pkg.MessageInstruct{
+			Message: c.message,
+		},
+		NewChat:  true,
+		ChatName: c.header.ChatName,
+	})
+	if err != nil {
+		c.loadChat <- err
+	} else {
+		c.loadChat <- response
+	}
+}
+
 func (c ChatFirstMessageSetup) callLoadChat() ChatFirstMessageSetup {
 	c.loadChat = make(chan any)
-	go func() {
-		response, err := c.rag.SendNewMessageToChat(pkg.ChatInstruct{
-			Message: pkg.MessageInstruct{
-				Message: c.message,
-			},
-			NewChat:  true,
-			ChatName: c.header.ChatName,
-		})
-		if err != nil {
-			c.loadChat <- err
-		} else {
-			c.loadChat <- response
-		}
-
-	}()
+	if c.isSingleShot {
+		go c.SingleShotMessage()
+	} else {
+		go c.NewChatMessage()
+	}
 	return c
 }
 

@@ -108,7 +108,7 @@ func main() {
 		context.Background(),
 		configT.GetChromaConfig(),
 	)
-	p := tea.NewProgram(tui.NewChatSetup(rag))
+	p := tea.NewProgram(tui.NewMenu(rag))
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Error during execution: %s\n", err)
 		os.Exit(1)
