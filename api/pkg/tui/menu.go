@@ -2,7 +2,6 @@ package tui
 
 import (
 	"fmt"
-	"ragAPI/pkg"
 	localnet "ragAPI/pkg/local-net"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -23,9 +22,9 @@ type MainMenu struct {
 	focusedOption int
 }
 
-func NewMenu(rag *pkg.RAG) MainMenu {
+func NewMenu(rag *localnet.LocalControler) MainMenu {
 	return MainMenu{
-		localnet.NewLocalControler(rag),
+		rag,
 		0,
 	}
 }
@@ -36,6 +35,9 @@ func (m MainMenu) Init() tea.Cmd {
 
 func (m MainMenu) ReturnFocusedOption() (tea.Model, tea.Cmd) {
 	switch m.focusedOption {
+	case 1:
+		chat := NewChatMenu(m.rag)
+		return chat, chat.Loader.Tick()
 	case 2:
 		return NewFirstMessageSetup(m.rag, "Single Shot Message", true), nil
 	}

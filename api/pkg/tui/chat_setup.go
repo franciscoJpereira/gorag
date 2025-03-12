@@ -7,7 +7,6 @@ import (
 
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 )
 
 /*
@@ -22,8 +21,7 @@ type ChatFirstMessageSetup struct {
 	rag          *localnet.LocalControler
 	header       ChatHeader
 	message      string
-	loading      bool
-	spinType     spinner.Model
+	loader       Loader
 	loadChat     chan any
 	isSingleShot bool
 }
@@ -38,11 +36,7 @@ func NewFirstMessageSetup(
 		rag,
 		ChatHeader{ChatName: chatName},
 		"",
-		false,
-		spinner.New(
-			spinner.WithSpinner(spinner.Meter),
-			spinner.WithStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("#00ff00"))),
-		),
+		NewLoader(),
 		nil,
 		singleShot,
 	}
@@ -131,9 +125,9 @@ func (c ChatFirstMessageSetup) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd)
 		return c, tea.Quit
 	case "enter":
 		//Return a new Chat instance
-		c.loading = true
+		c.loader.Loading = true
 		c = c.callLoadChat()
-		return c, c.spinType.Tick
+		return c, c.loader.Tick()
 	case tea.KeyBackspace.String():
 		if len(c.message) == 0 {
 			break
@@ -160,8 +154,8 @@ func (c ChatFirstMessageSetup) handleTickMessage(msg spinner.TickMsg) (tea.Model
 			), nil
 		}
 	default:
-		newSpin, cmd := c.spinType.Update(msg)
-		c.spinType = newSpin
+		newSpin, cmd := c.loader.Update(msg)
+		c.loader = newSpin.(Loader)
 		return c, cmd
 	}
 
@@ -180,8 +174,8 @@ func (c ChatFirstMessageSetup) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (c ChatFirstMessageSetup) View() string {
-	if c.loading {
-		return c.spinType.View()
+	if c.loader.Loading {
+		return c.loader.View()
 	}
 
 	return fmt.Sprintf("%s\n>> %s|\n", c.header.View(), c.message)

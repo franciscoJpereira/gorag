@@ -10,6 +10,7 @@ import (
 	apiinterface "ragAPI/pkg/apiInterface"
 	"ragAPI/pkg/chat/store"
 	knowledgebase "ragAPI/pkg/knowledge-base"
+	localnet "ragAPI/pkg/local-net"
 	"ragAPI/pkg/tui"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -108,7 +109,7 @@ func main() {
 		context.Background(),
 		configT.GetChromaConfig(),
 	)
-	p := tea.NewProgram(tui.NewMenu(rag))
+	p := tea.NewProgram(tui.NewMenu(localnet.NewLocalControler(rag)))
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Error during execution: %s\n", err)
 		os.Exit(1)
