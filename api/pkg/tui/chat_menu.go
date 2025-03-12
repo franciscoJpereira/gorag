@@ -55,7 +55,9 @@ func (c ChatMenu) manageKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			c.focusedChat++
 		}
 	case tea.KeyEnter:
-		//TODO: Go to existing chat or create new one
+		if c.focusedChat == 0 {
+			return NewChatSetup(c.rag), nil
+		}
 		return c, tea.Quit
 	case tea.KeyEsc:
 		return NewMenu(c.rag), nil

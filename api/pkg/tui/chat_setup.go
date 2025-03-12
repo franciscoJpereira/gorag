@@ -42,9 +42,9 @@ func NewFirstMessageSetup(
 	}
 }
 
-func NewChatSetup(rag *pkg.RAG) ChatNameSetup {
+func NewChatSetup(rag *localnet.LocalControler) ChatNameSetup {
 	return ChatNameSetup{
-		localnet.NewLocalControler(rag),
+		rag,
 		"",
 	}
 }
