@@ -31,6 +31,7 @@ func NewFirstMessageSetup(
 	rag *localnet.LocalControler,
 	chatName string,
 ) ChatFirstMessageSetup {
+
 	return ChatFirstMessageSetup{
 		rag,
 		ChatHeader{ChatName: chatName},
@@ -104,37 +105,56 @@ func (c ChatFirstMessageSetup) callLoadChat() ChatFirstMessageSetup {
 	return c
 }
 
+func (c ChatFirstMessageSetup) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch msg.String() {
+	case tea.KeyEscape.String():
+		return c, tea.Quit
+	case "enter":
+		//Return a new Chat instance
+		c.loading = true
+		c = c.callLoadChat()
+		return c, c.spinType.Tick
+	case tea.KeyBackspace.String():
+		if len(c.message) == 0 {
+			break
+		}
+		c.message = c.message[:len(c.message)-1]
+	default:
+		c.message += msg.String()
+	}
+	return c, nil
+}
+
+func (c ChatFirstMessageSetup) handleTickMessage(msg spinner.TickMsg) (tea.Model, tea.Cmd) {
+	select {
+	case response := <-c.loadChat:
+		err, ok := response.(error)
+		value, _ := response.(pkg.MessageResponse)
+		if ok {
+			return ErrorPopup{err.Error()}, nil
+		} else {
+			return NewChatPiece(
+				c.header,
+				value.Query,
+				value.Response,
+			), nil
+		}
+	default:
+		newSpin, cmd := c.spinType.Update(msg)
+		c.spinType = newSpin
+		return c, cmd
+	}
+
+}
+
 func (c ChatFirstMessageSetup) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		switch msg.String() {
-		case tea.KeyEscape.String():
-			return c, tea.Quit
-		case "enter":
-			//Return a new Chat instance
-			c.loading = true
-
-			return c, c.spinType.Tick
-		case tea.KeyBackspace.String():
-			if len(c.message) == 0 {
-				break
-			}
-			c.message = c.message[:len(c.message)-1]
-		default:
-			c.message += msg.String()
-		}
+		return c.handleKeyMsg(msg)
 	case spinner.TickMsg:
-		select {
-		case <-c.loadChat:
-			return c, tea.Quit
-		default:
-			newSpin, cmd := c.spinType.Update(msg)
-			c.spinType = newSpin
-			return c, cmd
-		}
+		return c.handleTickMessage(msg)
 	default:
 		break
-
 	}
 	return c, nil
 }

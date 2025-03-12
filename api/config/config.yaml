@@ -8,6 +8,6 @@ chroma:
   max-values: 10
 model:
   model: "deepseek-r1-distill-llama-8b@q6_k"
-  model-url: "http://localhost:1234/v1/chat/completions"
+  model-url: "http://localhost:1234/v1/"
 store:
   store-path: "../store"

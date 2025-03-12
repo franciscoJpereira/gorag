@@ -74,6 +74,7 @@ func (s *OpenAIChatModel) Send(
 		},
 		s.options...,
 	)
+
 	response = ChatMessage{
 		Content: completion.Choices[0].Message.Content,
 		Role:    string(completion.Choices[0].Message.Role),
