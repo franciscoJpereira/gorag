@@ -5,7 +5,6 @@ import (
 	"ragAPI/pkg"
 	localnet "ragAPI/pkg/local-net"
 
-	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -22,7 +21,6 @@ type ChatFirstMessageSetup struct {
 	header       ChatHeader
 	message      string
 	loader       Loader
-	loadChat     chan any
 	isSingleShot bool
 }
 
@@ -37,7 +35,6 @@ func NewFirstMessageSetup(
 		ChatHeader{ChatName: chatName},
 		"",
 		NewLoader(),
-		nil,
 		singleShot,
 	}
 }
@@ -88,9 +85,9 @@ func (c ChatFirstMessageSetup) SingleShotMessage() {
 	},
 	)
 	if err != nil {
-		c.loadChat <- err
+		c.loader.chn <- err
 	} else {
-		c.loadChat <- response
+		c.loader.chn <- response
 	}
 }
 
@@ -103,14 +100,13 @@ func (c ChatFirstMessageSetup) NewChatMessage() {
 		ChatName: c.header.ChatName,
 	})
 	if err != nil {
-		c.loadChat <- err
+		c.loader.chn <- err
 	} else {
-		c.loadChat <- response
+		c.loader.chn <- response
 	}
 }
 
 func (c ChatFirstMessageSetup) callLoadChat() ChatFirstMessageSetup {
-	c.loadChat = make(chan any)
 	if c.isSingleShot {
 		go c.SingleShotMessage()
 	} else {
@@ -139,33 +135,30 @@ func (c ChatFirstMessageSetup) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd)
 	return c, nil
 }
 
-func (c ChatFirstMessageSetup) handleTickMessage(msg spinner.TickMsg) (tea.Model, tea.Cmd) {
-	select {
-	case response := <-c.loadChat:
-		err, ok := response.(error)
-		value, _ := response.(pkg.MessageResponse)
-		if ok {
-			return ErrorPopup{err.Error()}, nil
-		} else {
-			return NewChatPiece(
-				c.header,
-				value.Query,
-				value.Response,
-			), nil
-		}
-	default:
-		newSpin, cmd := c.loader.Update(msg)
-		c.loader = newSpin.(Loader)
+func (c ChatFirstMessageSetup) handleTickMessage(msg LoadMsg) (tea.Model, tea.Cmd) {
+	loader, cmd := c.loader.Update(msg)
+	c.loader = loader.(Loader)
+	if c.loader.Value == nil {
 		return c, cmd
 	}
-
+	err, ok := c.loader.Value.(error)
+	value, _ := c.loader.Value.(pkg.MessageResponse)
+	if ok {
+		return ErrorPopup{err.Error()}, nil
+	} else {
+		return NewChatPiece(
+			c.header,
+			value.Query,
+			value.Response,
+		), nil
+	}
 }
 
 func (c ChatFirstMessageSetup) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		return c.handleKeyMsg(msg)
-	case spinner.TickMsg:
+	case LoadMsg:
 		return c.handleTickMessage(msg)
 	default:
 		break
