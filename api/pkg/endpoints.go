@@ -129,14 +129,24 @@ func SendNewMessageToChat(c echo.Context) error {
 // @Summary Retrieves all available Chats
 // @Description Returns the names of all existing chats
 // @Tags chat
+// @Param chatID query string false "Chat ID"
 // @Accept json
 // @produce json
 // @Success 200 {array} string
+// @Success 200 {object} store.ChatHistory
 // @Router /chat [get]
 func RetrieveAvailableChats(c echo.Context) error {
 	rag, ok := c.Get(RAGKey).(*RAG)
+	query := c.QueryParam("chatID")
 	if !ok {
 		return c.String(http.StatusInternalServerError, "RAG is not set")
+	}
+	if query != "" {
+		chatHistory, err := rag.RetrieveChat(query)
+		if err != nil {
+			return c.String(http.StatusInternalServerError, err.Error())
+		}
+		return c.JSON(http.StatusOK, chatHistory)
 	}
 	names, err := rag.ListChats()
 	if err != nil {

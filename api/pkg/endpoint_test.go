@@ -321,9 +321,9 @@ func TestNoChatRetrieval(t *testing.T) {
 
 func TestMultipleChatRetrieval(t *testing.T) {
 	rag := createMockedRAG()
-	createChat("Chat 1", rag)
-	createChat("Chat 2", rag)
-	createChat("Chat 3", rag)
+	createChat("Chat1", rag)
+	createChat("Chat2", rag)
+	createChat("Chat3", rag)
 	req := httptest.NewRequest(http.MethodGet, "/", strings.NewReader(""))
 	rec := httptest.NewRecorder()
 	e := echo.New()
@@ -343,11 +343,26 @@ func TestMultipleChatRetrieval(t *testing.T) {
 		t.Fatalf("Failed response length: %d\n", len(response))
 	}
 	for i := range 3 {
-		if response[i] != fmt.Sprintf("Chat %d", i+1) {
+		if response[i] != fmt.Sprintf("Chat%d", i+1) {
 			t.Fatalf("Failed at response %d with value: %s", i, response[i])
 		}
 	}
-	removeFile("../test/Chat 1.json")
-	removeFile("../test/Chat 2.json")
-	removeFile("../test/Chat 3.json")
+	// Try retrieve chat history
+	req = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/qparams?%s=%s", "chatID", "Chat1"), strings.NewReader(""))
+	rec = httptest.NewRecorder()
+	c = e.NewContext(req, rec)
+	c.Set(pkg.RAGKey, rag)
+	if err := pkg.RetrieveAvailableChats(c); err != nil {
+		t.Fatalf("Failed retrieving chat: %s\n", err)
+	}
+	var responseChat store.ChatHistory
+	if rec.Code != http.StatusOK {
+		t.Fatalf("Failed with status: %d\n", rec.Code)
+	}
+	if err := json.Unmarshal(rec.Body.Bytes(), &responseChat); err != nil {
+		t.Fatalf("Failed unmarshaling response: %s\n", err)
+	}
+	removeFile("../test/Chat1.json")
+	removeFile("../test/Chat2.json")
+	removeFile("../test/Chat3.json")
 }

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	localnet "ragAPI/pkg/local-net"
 
-	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -14,16 +13,15 @@ type ChatMenu struct {
 	chats       []string
 	Loader      Loader
 	focusedChat int
-	chn         chan any
 }
 
 func (c ChatMenu) LoadChats() {
 	c.Loader.Loading = true
 	chats, err := c.rag.RetrieveAvailableChats()
 	if err != nil {
-		c.chn <- err
+		c.Loader.chn <- err
 	} else {
-		c.chn <- chats
+		c.Loader.chn <- chats
 	}
 }
 
@@ -33,10 +31,10 @@ func NewChatMenu(rag *localnet.LocalControler) ChatMenu {
 		[]string{"New Chat"},
 		NewLoader(),
 		0,
-		make(chan any),
 	}
 	chat.Loader.Loading = true
 	go chat.LoadChats()
+	chat.Update(chat.Loader.Tick()())
 	return chat
 }
 
@@ -51,7 +49,7 @@ func (c ChatMenu) manageKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			c.focusedChat--
 		}
 	case tea.KeyDown:
-		if c.focusedChat < len(c.chats) {
+		if c.focusedChat < len(c.chats)-1 {
 			c.focusedChat++
 		}
 	case tea.KeyEnter:
@@ -71,9 +69,12 @@ func (c ChatMenu) manageMsg(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if !c.Loader.Loading {
 			return c.manageKeyMsg(msg)
 		}
-	case spinner.TickMsg:
+	case LoadMsg:
 		loader, cmd := c.Loader.Update(msg)
 		c.Loader = loader.(Loader)
+		if c.Loader.Value != nil {
+			return c.manageLoadValue(c.Loader.Value)
+		}
 		return c, cmd
 	}
 	return c, nil
@@ -92,14 +93,7 @@ func (c ChatMenu) manageLoadValue(value any) (tea.Model, tea.Cmd) {
 }
 
 func (c ChatMenu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-
-	select {
-	case value := <-c.chn:
-		return c.manageLoadValue(value)
-	default:
-		return c.manageMsg(msg)
-	}
-
+	return c.manageMsg(msg)
 }
 
 func (c ChatMenu) View() string {

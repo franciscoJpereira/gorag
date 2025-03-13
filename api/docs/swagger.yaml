@@ -1,4 +1,11 @@
 definitions:
+  apiinterface.ChatMessage:
+    properties:
+      content:
+        type: string
+      role:
+        type: string
+    type: object
   pkg.ChatInstruct:
     properties:
       ChatName:
@@ -39,6 +46,15 @@ definitions:
       Response:
         type: string
     type: object
+  store.ChatHistory:
+    properties:
+      history:
+        items:
+          $ref: '#/definitions/apiinterface.ChatMessage'
+        type: array
+      name:
+        type: string
+    type: object
 info:
   contact: {}
 paths:
@@ -47,15 +63,18 @@ paths:
       consumes:
       - application/json
       description: Returns the names of all existing chats
+      parameters:
+      - description: Chat ID
+        in: query
+        name: chatID
+        type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            items:
-              type: string
-            type: array
+            $ref: '#/definitions/store.ChatHistory'
       summary: Retrieves all available Chats
       tags:
       - chat

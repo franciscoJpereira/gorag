@@ -28,14 +28,19 @@ const docTemplate = `{
                     "chat"
                 ],
                 "summary": "Retrieves all available Chats",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Chat ID",
+                        "name": "chatID",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/store.ChatHistory"
                         }
                     }
                 }
@@ -217,6 +222,17 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "apiinterface.ChatMessage": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                }
+            }
+        },
         "pkg.ChatInstruct": {
             "type": "object",
             "properties": {
@@ -275,6 +291,20 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "Response": {
+                    "type": "string"
+                }
+            }
+        },
+        "store.ChatHistory": {
+            "type": "object",
+            "properties": {
+                "history": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/apiinterface.ChatMessage"
+                    }
+                },
+                "name": {
                     "type": "string"
                 }
             }

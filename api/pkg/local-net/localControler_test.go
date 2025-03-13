@@ -168,5 +168,31 @@ func TestRetrievingChatNames(t *testing.T) {
 		}
 		removeFile(fmt.Sprintf("../../test/%s.json", chatname))
 	}
+}
 
+func TestRetrieveChat(t *testing.T) {
+	rag := createMockedRAG()
+	chatname := "Chat1"
+	rag.NewChatMessage(pkg.ChatInstruct{
+		Message: pkg.MessageInstruct{
+			Message: "Created",
+		},
+		NewChat:  true,
+		ChatName: chatname,
+	})
+	controler := localnet.NewLocalControler(rag)
+	ch, err := controler.RetrieveChat(chatname)
+	if err != nil {
+		t.Fatalf("Failed to retrieve Chat: %s\n", err)
+	}
+	if ch.ChatName != chatname {
+		t.Fatalf("Invalid chatname: %s\n", ch.ChatName)
+	}
+	if len(ch.Messages) != 2 {
+		t.Fatalf("Invalid chat messages: %v\n", ch.Messages)
+	}
+	if ch.Messages[0].Content != "Created" {
+		t.Fatalf("Invalid message content: %s\n", ch.Messages[0].Content)
+	}
+	removeFile("../../test/Chat1.json")
 }

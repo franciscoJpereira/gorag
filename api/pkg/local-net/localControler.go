@@ -3,8 +3,10 @@ package localnet
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"ragAPI/pkg"
+	"ragAPI/pkg/chat/store"
 
 	"github.com/labstack/echo/v4"
 )
@@ -22,12 +24,12 @@ func NewLocalControler(rag *pkg.RAG) *LocalControler {
 }
 
 // Wrapper to create a context and call the given method passing the corresponding data to it
-func (lc *LocalControler) callMethod(method echo.HandlerFunc, data any, params map[string]string) (response ResponseWriter, err error) {
+func (lc *LocalControler) callMethod(method echo.HandlerFunc, url string, data any, params map[string]string) (response ResponseWriter, err error) {
 	m, err := json.Marshal(data)
 	if err != nil {
 		return
 	}
-	req, err := http.NewRequest(http.MethodGet, "/", bytes.NewBuffer(m))
+	req, err := http.NewRequest(http.MethodGet, url, bytes.NewBuffer(m))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	if err != nil {
 		return
@@ -49,7 +51,7 @@ func (lc *LocalControler) callMethod(method echo.HandlerFunc, data any, params m
 }
 
 func (lc *LocalControler) GetAvailableKBs() (s []string, err error) {
-	response, err := lc.callMethod(pkg.GetAvailableKBs, []string{}, map[string]string{})
+	response, err := lc.callMethod(pkg.GetAvailableKBs, "/", []string{}, map[string]string{})
 	if err != nil {
 		return
 	}
@@ -60,6 +62,7 @@ func (lc *LocalControler) GetAvailableKBs() (s []string, err error) {
 func (lc *LocalControler) CreateKB(kbname string) error {
 	_, err := lc.callMethod(
 		pkg.CreateKB,
+		"/",
 		[]string{},
 		map[string]string{
 			"KBName": kbname,
@@ -71,6 +74,7 @@ func (lc *LocalControler) CreateKB(kbname string) error {
 func (lc *LocalControler) AddDataToKB(data pkg.KBAddDataInstruct) error {
 	_, err := lc.callMethod(
 		pkg.AddDataToKB,
+		"/",
 		data,
 		map[string]string{},
 	)
@@ -80,6 +84,7 @@ func (lc *LocalControler) AddDataToKB(data pkg.KBAddDataInstruct) error {
 func (lc *LocalControler) SingleShotMessage(data pkg.MessageInstruct) (response pkg.MessageResponse, err error) {
 	rData, err := lc.callMethod(
 		pkg.SingleShotMessage,
+		"/",
 		data,
 		map[string]string{},
 	)
@@ -93,6 +98,7 @@ func (lc *LocalControler) SingleShotMessage(data pkg.MessageInstruct) (response 
 func (lc *LocalControler) SendNewMessageToChat(data pkg.ChatInstruct) (response pkg.MessageResponse, err error) {
 	rData, err := lc.callMethod(
 		pkg.SendNewMessageToChat,
+		"/",
 		data,
 		map[string]string{},
 	)
@@ -106,6 +112,7 @@ func (lc *LocalControler) SendNewMessageToChat(data pkg.ChatInstruct) (response 
 func (lc *LocalControler) RetrieveAvailableChats() (chats []string, err error) {
 	response, err := lc.callMethod(
 		pkg.RetrieveAvailableChats,
+		"/",
 		[]string{},
 		map[string]string{},
 	)
@@ -113,5 +120,19 @@ func (lc *LocalControler) RetrieveAvailableChats() (chats []string, err error) {
 		return
 	}
 	err = json.Unmarshal(response.Buf.Bytes(), &chats)
+	return
+}
+
+func (lc *LocalControler) RetrieveChat(chatname string) (c store.ChatHistory, err error) {
+	response, err := lc.callMethod(
+		pkg.RetrieveAvailableChats,
+		fmt.Sprintf("/q?chatID=%s", chatname),
+		[]string{},
+		map[string]string{},
+	)
+	if err != nil {
+		return
+	}
+	err = json.Unmarshal(response.Buf.Bytes(), &c)
 	return
 }
