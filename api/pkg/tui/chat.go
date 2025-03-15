@@ -2,6 +2,8 @@ package tui
 
 import (
 	"fmt"
+	"ragAPI/pkg"
+	apiinterface "ragAPI/pkg/apiInterface"
 	"ragAPI/pkg/chat/store"
 	localnet "ragAPI/pkg/local-net"
 	"strings"
@@ -118,6 +120,7 @@ type Chat struct {
 	current      ChatPiece
 	currentIndex int
 	message      ChatMessage
+	loader       Loader
 }
 
 func NewChat(rag *localnet.LocalControler, history store.ChatHistory) Chat {
@@ -126,13 +129,29 @@ func NewChat(rag *localnet.LocalControler, history store.ChatHistory) Chat {
 		rag:          rag,
 		history:      history,
 		current:      firstPiece,
-		currentIndex: 0,
+		currentIndex: len(history.Messages) - 2,
 		message:      ChatMessage{},
+		loader:       NewLoader(),
 	}
 }
 
 func (c Chat) Init() tea.Cmd {
 	return nil
+}
+
+func (c Chat) loadMessage() {
+	response, err := c.rag.SendNewMessageToChat(pkg.ChatInstruct{
+		Message: pkg.MessageInstruct{
+			Message: c.message.mesage,
+		},
+		ChatName: c.history.ChatName,
+	})
+	if err != nil {
+		c.loader.chn <- err
+	} else {
+
+		c.loader.chn <- response
+	}
 }
 
 func (c Chat) manageKeyMsg(msg tea.KeyMsg) Chat {
@@ -145,6 +164,13 @@ func (c Chat) manageKeyMsg(msg tea.KeyMsg) Chat {
 		if c.currentIndex < len(c.history.Messages)-4 {
 			c.currentIndex += 2
 		}
+	case tea.KeyDown:
+		break
+	case tea.KeyUp:
+		break
+	default:
+		message, _ := c.message.Update(msg)
+		c.message = message.(ChatMessage)
 	}
 	c.current = NewChatPiece(
 		ChatHeader{c.history.ChatName},
@@ -154,27 +180,59 @@ func (c Chat) manageKeyMsg(msg tea.KeyMsg) Chat {
 	return c
 }
 
+func (c Chat) manageLoadMsg(msg tea.Msg) (tea.Model, tea.Cmd) {
+	loader, cmd := c.loader.Update(msg)
+	c.loader = loader.(Loader)
+	if c.loader.Value != nil {
+		c.message = ChatMessage{}
+		err, ok := c.loader.Value.(error)
+		response, _ := c.loader.Value.(pkg.MessageResponse)
+		c.loader.Value = nil
+		c.loader.Loading = false
+		if ok {
+			return ErrorPopup{err.Error()}, nil
+		}
+		c.history.Messages = append(c.history.Messages,
+			apiinterface.ChatMessage{
+				Role:    "user",
+				Content: c.message.mesage,
+			},
+			apiinterface.ChatMessage{
+				Role:    "system",
+				Content: response.Response,
+			},
+		)
+		c.currentIndex += 2
+	}
+	return c, cmd
+}
+
 func (c Chat) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		if msg.Type == tea.KeyEnter && c.message.mesage != "" {
-			// TODO: Manage the sending of a new Chat message
-			return c, nil
+			c.loader.Loading = true
+			go c.loadMessage()
+			return c, c.loader.Tick()
 		}
 		c = c.manageKeyMsg(msg)
 		if msg.Type == tea.KeyEscape {
 			return NewMenu(c.rag), nil
 		}
+	default:
+		return c.manageLoadMsg(msg)
 	}
 	current, _ := c.current.Update(msg)
-	message, _ := c.message.Update(msg)
 	c.current = current.(ChatPiece)
-	c.message = message.(ChatMessage)
 	return c, nil
 }
 
 func (c Chat) View() string {
-	view := c.current.View()
-	view += "\n" + c.message.View()
+	view := c.current.View() + "\n"
+	if !c.loader.Loading {
+		view += c.message.View()
+	} else {
+		view += c.loader.View()
+	}
 	return view
 }

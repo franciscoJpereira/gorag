@@ -147,7 +147,7 @@ func (c ChatFirstMessageSetup) handleTickMessage(msg LoadMsg) (tea.Model, tea.Cm
 	value, _ := c.loader.Value.(pkg.MessageResponse)
 	if ok {
 		return ErrorPopup{err.Error()}, nil
-	} else {
+	} else if !c.isSingleShot {
 		newChat := NewChat(
 			c.rag,
 			store.ChatHistory{
@@ -165,6 +165,12 @@ func (c ChatFirstMessageSetup) handleTickMessage(msg LoadMsg) (tea.Model, tea.Cm
 			},
 		)
 		return newChat, nil
+	} else {
+		return NewChatPiece(
+			c.header,
+			c.message,
+			value.Response,
+		), nil
 	}
 }
 
