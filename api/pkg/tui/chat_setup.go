@@ -3,6 +3,8 @@ package tui
 import (
 	"fmt"
 	"ragAPI/pkg"
+	apiinterface "ragAPI/pkg/apiInterface"
+	"ragAPI/pkg/chat/store"
 	localnet "ragAPI/pkg/local-net"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -146,11 +148,23 @@ func (c ChatFirstMessageSetup) handleTickMessage(msg LoadMsg) (tea.Model, tea.Cm
 	if ok {
 		return ErrorPopup{err.Error()}, nil
 	} else {
-		return NewChatPiece(
-			c.header,
-			value.Query,
-			value.Response,
-		), nil
+		newChat := NewChat(
+			c.rag,
+			store.ChatHistory{
+				ChatName: c.header.ChatName,
+				Messages: []apiinterface.ChatMessage{
+					{
+						Role:    "user",
+						Content: value.Query,
+					},
+					{
+						Role:    "system",
+						Content: value.Response,
+					},
+				},
+			},
+		)
+		return newChat, nil
 	}
 }
 

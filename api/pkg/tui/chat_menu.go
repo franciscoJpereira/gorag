@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"ragAPI/pkg/chat/store"
 	localnet "ragAPI/pkg/local-net"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -22,6 +23,16 @@ func (c ChatMenu) LoadChats() {
 		c.Loader.chn <- err
 	} else {
 		c.Loader.chn <- chats
+	}
+}
+
+func (c ChatMenu) RetrieveCurrentChat() {
+	c.Loader.Loading = true
+	history, err := c.rag.RetrieveChat(c.chats[c.focusedChat])
+	if err != nil {
+		c.Loader.chn <- err
+	} else {
+		c.Loader.chn <- history
 	}
 }
 
@@ -56,7 +67,9 @@ func (c ChatMenu) manageKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		if c.focusedChat == 0 {
 			return NewChatSetup(c.rag), nil
 		}
-		return c, tea.Quit
+		c.Loader = NewLoader()
+		go c.RetrieveCurrentChat()
+		return c, c.Loader.Tick()
 	case tea.KeyEsc:
 		return NewMenu(c.rag), nil
 	}
@@ -82,13 +95,16 @@ func (c ChatMenu) manageMsg(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (c ChatMenu) manageLoadValue(value any) (tea.Model, tea.Cmd) {
 	err, ok := value.(error)
-	chats, _ := value.([]string)
+	chats, isChat := value.([]string)
+	history, _ := value.(store.ChatHistory)
 	if ok {
 		return ErrorPopup{err.Error()}, nil
-	} else {
+	} else if isChat {
 		c.chats = append(c.chats, chats...)
 		c.Loader.Loading = false
 		return c, nil
+	} else {
+		return NewChat(c.rag, history), nil
 	}
 }
 

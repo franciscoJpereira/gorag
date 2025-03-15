@@ -2,6 +2,8 @@ package tui
 
 import (
 	"fmt"
+	"ragAPI/pkg/chat/store"
+	localnet "ragAPI/pkg/local-net"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/viewport"
@@ -74,5 +76,105 @@ func (c ChatPiece) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (c ChatPiece) View() string {
 	line := strings.Repeat("-", max(0, c.port.Width))
-	return lipgloss.JoinVertical(lipgloss.Left, c.header.View(), line, c.port.View())
+	trail := strings.Repeat("=", max(0, c.port.Width))
+	return lipgloss.JoinVertical(lipgloss.Left, c.header.View(), line, c.port.View(), trail)
+}
+
+type ChatMessage struct {
+	mesage string
+}
+
+func (c ChatMessage) Init() tea.Cmd {
+	return nil
+}
+
+func (c ChatMessage) manageKeyMsg(msg tea.KeyMsg) ChatMessage {
+	switch msg.Type {
+	case tea.KeyBackspace:
+		if len(c.mesage) > 0 {
+			c.mesage = c.mesage[:len(c.mesage)-1]
+		}
+	default:
+		c.mesage += msg.String()
+	}
+	return c
+}
+
+func (c ChatMessage) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		c = c.manageKeyMsg(msg)
+	}
+	return c, nil
+}
+
+func (c ChatMessage) View() string {
+	return fmt.Sprintf(">> %s|\n", c.mesage)
+}
+
+type Chat struct {
+	rag          *localnet.LocalControler
+	history      store.ChatHistory
+	current      ChatPiece
+	currentIndex int
+	message      ChatMessage
+}
+
+func NewChat(rag *localnet.LocalControler, history store.ChatHistory) Chat {
+	firstPiece := NewChatPiece(ChatHeader{history.ChatName}, history.Messages[0].Content, history.Messages[1].Content)
+	return Chat{
+		rag:          rag,
+		history:      history,
+		current:      firstPiece,
+		currentIndex: 0,
+		message:      ChatMessage{},
+	}
+}
+
+func (c Chat) Init() tea.Cmd {
+	return nil
+}
+
+func (c Chat) manageKeyMsg(msg tea.KeyMsg) Chat {
+	switch msg.Type {
+	case tea.KeyLeft:
+		if c.currentIndex > 1 {
+			c.currentIndex -= 2
+		}
+	case tea.KeyRight:
+		if c.currentIndex < len(c.history.Messages)-4 {
+			c.currentIndex += 2
+		}
+	}
+	c.current = NewChatPiece(
+		ChatHeader{c.history.ChatName},
+		c.history.Messages[c.currentIndex].Content,
+		c.history.Messages[c.currentIndex+1].Content,
+	)
+	return c
+}
+
+func (c Chat) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		if msg.Type == tea.KeyEnter && c.message.mesage != "" {
+			// TODO: Manage the sending of a new Chat message
+			return c, nil
+		}
+		c = c.manageKeyMsg(msg)
+		if msg.Type == tea.KeyEscape {
+			return NewMenu(c.rag), nil
+		}
+	}
+	current, _ := c.current.Update(msg)
+	message, _ := c.message.Update(msg)
+	c.current = current.(ChatPiece)
+	c.message = message.(ChatMessage)
+	return c, nil
+}
+
+func (c Chat) View() string {
+	view := c.current.View()
+	view += "\n" + c.message.View()
+	return view
 }

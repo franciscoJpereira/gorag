@@ -35,7 +35,6 @@ func (l Loader) manageLoaderMsg(msg LoadMsg) (tea.Model, tea.Cmd) {
 	select {
 	case value := <-msg.Chn:
 		l.Value = value
-		close(l.chn)
 		return l, nil
 	default:
 		var cmd tea.Cmd
