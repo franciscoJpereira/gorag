@@ -124,12 +124,13 @@ type Chat struct {
 }
 
 func NewChat(rag *localnet.LocalControler, history store.ChatHistory) Chat {
-	firstPiece := NewChatPiece(ChatHeader{history.ChatName}, history.Messages[0].Content, history.Messages[1].Content)
+	currentIndex := len(history.Messages) - 2
+	firstPiece := NewChatPiece(ChatHeader{history.ChatName}, history.Messages[currentIndex].Content, history.Messages[currentIndex+1].Content)
 	return Chat{
 		rag:          rag,
 		history:      history,
 		current:      firstPiece,
-		currentIndex: len(history.Messages) - 2,
+		currentIndex: currentIndex,
 		message:      ChatMessage{},
 		loader:       NewLoader(),
 	}
