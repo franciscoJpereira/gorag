@@ -196,7 +196,7 @@ func (c Chat) manageLoadMsg(msg tea.Msg) (tea.Model, tea.Cmd) {
 		c.history.Messages = append(c.history.Messages,
 			apiinterface.ChatMessage{
 				Role:    "user",
-				Content: c.message.mesage,
+				Content: response.Query,
 			},
 			apiinterface.ChatMessage{
 				Role:    "system",
@@ -204,6 +204,11 @@ func (c Chat) manageLoadMsg(msg tea.Msg) (tea.Model, tea.Cmd) {
 			},
 		)
 		c.currentIndex += 2
+		c.current = NewChatPiece(
+			ChatHeader{c.history.ChatName},
+			c.history.Messages[c.currentIndex].Content,
+			c.history.Messages[c.currentIndex+1].Content,
+		)
 	}
 	return c, cmd
 }

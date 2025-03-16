@@ -67,6 +67,7 @@ func (c View) manageKeyUp() (tea.Model, tea.Cmd) {
 
 func (c View) manageKeyDown() (tea.Model, tea.Cmd) {
 	c.firstShown = min(len(c.textLines)-c.height, c.firstShown+DEFAULT_VERTICAL_SCROLL)
+	c.firstShown = max(0, c.firstShown)
 	return c, nil
 }
 
