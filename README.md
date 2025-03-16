@@ -23,6 +23,23 @@ There is a **config.yaml** file in the *api/config* directory that allows to con
 
 > Work in progress to configure how to run the whole system depending on an configuration parameter.
 
+## Instantiating a Chroma DB fresh instance
+
+You can instantiate a fresh Chroma DB instance by running the *clean-chroma* script that's provided in this repository.
+
+To be able to run this script you must have chroma installed in your machine. You can do this by running:
+
+```bash
+    pip install chromadb
+```
+
+afterwards you can run the script by running it using python.
+
+```bash
+    python clean-chroma.py
+```
+
+The config file for the system points to this Chroma instance by default.
 
 ## TO-DOs
 
