@@ -8,7 +8,6 @@ import (
 	localnet "ragAPI/pkg/local-net"
 	"strings"
 
-	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -35,19 +34,18 @@ type ChatPiece struct {
 	header    ChatHeader
 	UserQuery string
 	Response  string
-	port      viewport.Model
+	port      View
 }
 
-func generateContent(query, response string, port viewport.Model) string {
+func generateContent(query, response string, width int) string {
 	user := fmt.Sprintf("User >> \n%s\n", query)
 	model := fmt.Sprintf("Model >> \n%s\n", response)
-	line := strings.Repeat("=", max(0, port.Width))
+	line := strings.Repeat("=", max(0, width))
 	return lipgloss.JoinVertical(lipgloss.Left, user, line, model)
 }
 
 func NewChatPiece(header ChatHeader, query string, response string) ChatPiece {
-	port := viewport.New(100, 10)
-	port.SetContent(generateContent(query, response, port))
+	port := NewView(generateContent(query, response, DEFAULT_WIDTH))
 	return ChatPiece{
 		header,
 		query,
@@ -61,24 +59,20 @@ func (c ChatPiece) Init() tea.Cmd {
 }
 
 func (c ChatPiece) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	var cmd tea.Cmd
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		if msg.Type == tea.KeyEnter {
 			return c, tea.Quit
 		}
-	case tea.WindowSizeMsg:
-		c.port.Height = msg.Height
-		c.port.Width = msg.Width
+		port, _ := c.port.Update(msg)
+		c.port = port.(View)
 	}
-	c.port, cmd = c.port.Update(msg)
-
-	return c, tea.Batch([]tea.Cmd{cmd}...)
+	return c, nil
 }
 
 func (c ChatPiece) View() string {
-	line := strings.Repeat("-", max(0, c.port.Width))
-	trail := strings.Repeat("=", max(0, c.port.Width))
+	line := strings.Repeat("-", max(0, c.port.width))
+	trail := strings.Repeat("=", max(0, c.port.width))
 	return lipgloss.JoinVertical(lipgloss.Left, c.header.View(), line, c.port.View(), trail)
 }
 
@@ -161,10 +155,20 @@ func (c Chat) manageKeyMsg(msg tea.KeyMsg) Chat {
 		if c.currentIndex > 1 {
 			c.currentIndex -= 2
 		}
+		c.current = NewChatPiece(
+			ChatHeader{c.history.ChatName},
+			c.history.Messages[c.currentIndex].Content,
+			c.history.Messages[c.currentIndex+1].Content,
+		)
 	case tea.KeyRight:
-		if c.currentIndex < len(c.history.Messages)-4 {
+		if c.currentIndex < len(c.history.Messages)-2 {
 			c.currentIndex += 2
 		}
+		c.current = NewChatPiece(
+			ChatHeader{c.history.ChatName},
+			c.history.Messages[c.currentIndex].Content,
+			c.history.Messages[c.currentIndex+1].Content,
+		)
 	case tea.KeyDown:
 		break
 	case tea.KeyUp:
@@ -173,11 +177,7 @@ func (c Chat) manageKeyMsg(msg tea.KeyMsg) Chat {
 		message, _ := c.message.Update(msg)
 		c.message = message.(ChatMessage)
 	}
-	c.current = NewChatPiece(
-		ChatHeader{c.history.ChatName},
-		c.history.Messages[c.currentIndex].Content,
-		c.history.Messages[c.currentIndex+1].Content,
-	)
+
 	return c
 }
 
