@@ -36,10 +36,11 @@ type StoreOptions struct {
 
 // Main configuration options
 type T struct {
-	Server EchoConfig    `yaml:"echo"`
-	Chroma ChromaOptions `yaml:"chroma"`
-	Model  ModelOptions  `yaml:"model"`
-	Store  StoreOptions  `yaml:"store"`
+	RunLocalApp bool          `yaml:"local"`
+	Server      EchoConfig    `yaml:"echo"`
+	Chroma      ChromaOptions `yaml:"chroma"`
+	Model       ModelOptions  `yaml:"model"`
+	Store       StoreOptions  `yaml:"store"`
 }
 
 func GetConfiguration(f io.Reader) (t T, err error) {

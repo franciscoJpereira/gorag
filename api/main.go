@@ -29,7 +29,7 @@ func InjectRAG(r *pkg.RAG) echo.MiddlewareFunc {
 	}
 }
 
-func ServerMain() {
+func GetRagAndConfig() (*pkg.RAG, pkg.T) {
 	rag := &pkg.RAG{}
 	configPath, err := filepath.Abs(CONFIG_PATH)
 	if err != nil {
@@ -48,7 +48,6 @@ func ServerMain() {
 	if err != nil {
 		panic(fmt.Sprintf("Getting absolute path: %s", err))
 	}
-	e := echo.New()
 	modelUrl, modelName := configT.GetModelConfig()
 	rag.Api = apiinterface.NewOpenAIChatModel(
 		context.Background(),
@@ -63,7 +62,11 @@ func ServerMain() {
 		context.Background(),
 		configT.GetChromaConfig(),
 	)
+	return rag, configT
+}
 
+func ServerMain(rag *pkg.RAG, configT pkg.T) {
+	e := echo.New()
 	e.Use(InjectRAG(rag))
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 	e.POST("/knowledge-base/:KBName", pkg.CreateKB)
@@ -76,42 +79,19 @@ func ServerMain() {
 	e.Logger.Fatal(e.Start(configT.GetServerConfig()))
 }
 
-func main() {
-	rag := &pkg.RAG{}
-	configPath, err := filepath.Abs(CONFIG_PATH)
-	if err != nil {
-		panic(fmt.Sprintf("Getting config path: %s\n", err))
-	}
-	configFile, err := os.Open(configPath)
-	if err != nil {
-		panic(fmt.Sprintf("Opening config file: %s\n", err))
-	}
-	configT, err := pkg.GetConfiguration(configFile)
-	if err != nil {
-		panic(fmt.Sprintf("Parsing config file: %s\n", err))
-	}
-
-	storePath, err := filepath.Abs(configT.GetStoreConfig())
-	if err != nil {
-		panic(fmt.Sprintf("Getting absolute path: %s", err))
-	}
-	modelName, modelUrl := configT.GetModelConfig()
-	rag.Api = apiinterface.NewOpenAIChatModel(
-		context.Background(),
-		modelUrl,
-		modelName,
-	)
-	rag.ChatStore, err = store.NewJsonStore(storePath)
-	if err != nil {
-		panic(fmt.Sprintf("Creating chat store: %s", err))
-	}
-	rag.Kb, err = knowledgebase.NewChromaKB(
-		context.Background(),
-		configT.GetChromaConfig(),
-	)
+func RunTUI(rag *pkg.RAG, configT pkg.T) {
 	p := tea.NewProgram(tui.NewMenu(localnet.NewLocalControler(rag)))
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Error during execution: %s\n", err)
 		os.Exit(1)
+	}
+}
+
+func main() {
+	rag, configT := GetRagAndConfig()
+	if configT.RunLocalApp {
+		RunTUI(rag, configT)
+	} else {
+		ServerMain(rag, configT)
 	}
 }

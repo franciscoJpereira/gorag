@@ -1,3 +1,4 @@
+local: true
 echo:
   port: "1323"
   local: true

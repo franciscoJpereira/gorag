@@ -43,7 +43,7 @@ The config file for the system points to this Chroma instance by default.
 
 ## TO-DOs
 
-- :x:  Possibility to run the system as either an API or TUI application based on config parameters.
+- :heavy_check_mark:  Possibility to run the system as either an API or TUI application based on config parameters.
 
 - :x: Knowledge base support for the TUI application
 
