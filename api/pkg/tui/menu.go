@@ -35,6 +35,8 @@ func (m MainMenu) Init() tea.Cmd {
 
 func (m MainMenu) ReturnFocusedOption() (tea.Model, tea.Cmd) {
 	switch m.focusedOption {
+	case 0:
+		return NewKBMenu(m.rag)
 	case 1:
 		chat := NewChatMenu(m.rag)
 		return chat, chat.Loader.Tick()
