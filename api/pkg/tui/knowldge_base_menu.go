@@ -131,7 +131,7 @@ func (l ListKnowledgeBaseMenu) manageKBMsg(msg KBMsg) (tea.Model, tea.Cmd) {
 	if msg.NewBase {
 		return CreateKB(l.rag), nil
 	}
-	return NewFileAdder(msg.Base, l.rag), nil
+	return NewFileAdder(msg.Base, l.rag)
 }
 
 func (l ListKnowledgeBaseMenu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {

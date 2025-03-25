@@ -63,7 +63,7 @@ func (n NewKB) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		loader, cmd := n.loader.Update(msg)
 		n.loader = loader.(Loader)
 		if n.loader.Value != nil {
-			return NewFileAdder(n.kbName, n.rag), nil
+			return NewFileAdder(n.kbName, n.rag)
 		}
 		return n, cmd
 	}
