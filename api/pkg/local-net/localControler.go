@@ -2,7 +2,6 @@ package localnet
 
 import (
 	"bytes"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -22,15 +21,6 @@ func NewLocalControler(rag *pkg.RAG) *LocalControler {
 		e:   echo.New(),
 		rag: rag,
 	}
-}
-
-func EncodeBase64(name string) string {
-	return base64.StdEncoding.EncodeToString([]byte(name))
-}
-
-func DecodeBase64(name string) string {
-	result, _ := base64.StdEncoding.DecodeString(name)
-	return string(result)
 }
 
 // Wrapper to create a context and call the given method passing the corresponding data to it
@@ -106,7 +96,7 @@ func (lc *LocalControler) SingleShotMessage(data pkg.MessageInstruct) (response 
 }
 
 func (lc *LocalControler) SendNewMessageToChat(data pkg.ChatInstruct) (response pkg.MessageResponse, err error) {
-	data.ChatName = EncodeBase64(data.ChatName)
+	data.ChatName = pkg.EncodeBase64(data.ChatName)
 	rData, err := lc.callMethod(
 		pkg.SendNewMessageToChat,
 		"/",
@@ -132,7 +122,7 @@ func (lc *LocalControler) RetrieveAvailableChats() (chats []string, err error) {
 	}
 	err = json.Unmarshal(response.Buf.Bytes(), &chats)
 	for index, chatname := range chats {
-		chats[index] = DecodeBase64(chatname)
+		chats[index] = pkg.DecodeBase64(chatname)
 	}
 	return
 }
@@ -140,7 +130,7 @@ func (lc *LocalControler) RetrieveAvailableChats() (chats []string, err error) {
 func (lc *LocalControler) RetrieveChat(chatname string) (c store.ChatHistory, err error) {
 	response, err := lc.callMethod(
 		pkg.RetrieveAvailableChats,
-		fmt.Sprintf("/q?chatID=%s", EncodeBase64(chatname)),
+		fmt.Sprintf("/q?chatID=%s", pkg.EncodeBase64(chatname)),
 		[]string{},
 		map[string]string{},
 	)
@@ -149,7 +139,7 @@ func (lc *LocalControler) RetrieveChat(chatname string) (c store.ChatHistory, er
 	}
 	err = json.Unmarshal(response.Buf.Bytes(), &c)
 	if err == nil {
-		c.ChatName = DecodeBase64(c.ChatName)
+		c.ChatName = pkg.DecodeBase64(c.ChatName)
 	}
 	return
 }

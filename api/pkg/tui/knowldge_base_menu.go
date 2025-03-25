@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"ragAPI/pkg"
 	localnet "ragAPI/pkg/local-net"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -29,7 +30,7 @@ func (k KnowledgeBaseMenu) LoadChats() {
 	if ok && err != nil {
 		loader.chn <- err
 	} else if ok {
-		loader.chn <- kbs
+		loader.chn <- pkg.DecodeBase64Batch(kbs)
 	}
 }
 
@@ -59,7 +60,6 @@ func (k KnowledgeBaseMenu) manageLoadMsg(msg tea.Msg) (tea.Model, tea.Cmd) {
 		k.submenu = newSubmenu
 		return k, cmd
 	}
-	return k, nil
 }
 
 func (k KnowledgeBaseMenu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -109,7 +109,7 @@ func (l ListKnowledgeBaseMenu) Init() tea.Cmd {
 	return nil
 }
 
-func (l ListKnowledgeBaseMenu) manageKeyMsg(msg tea.KeyMsg) (ListKnowledgeBaseMenu, tea.Cmd) {
+func (l ListKnowledgeBaseMenu) manageKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch msg.Type {
 	case tea.KeyDown:
 		if l.focused < len(l.bases)-1 {
@@ -121,6 +121,8 @@ func (l ListKnowledgeBaseMenu) manageKeyMsg(msg tea.KeyMsg) (ListKnowledgeBaseMe
 		}
 	case tea.KeyEnter:
 		return l, NewKBCmd(l.focused == 0, l.bases[l.focused])
+	case tea.KeyEsc:
+		return NewMenu(l.rag), nil
 	}
 	return l, nil
 }
@@ -129,8 +131,7 @@ func (l ListKnowledgeBaseMenu) manageKBMsg(msg KBMsg) (tea.Model, tea.Cmd) {
 	if msg.NewBase {
 		return CreateKB(l.rag), nil
 	}
-	// TODO: Return something that lets you add something new to an existing base
-	return NewMenu(l.rag), nil
+	return NewFileAdder(msg.Base, l.rag), nil
 }
 
 func (l ListKnowledgeBaseMenu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {

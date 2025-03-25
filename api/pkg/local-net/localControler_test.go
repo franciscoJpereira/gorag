@@ -118,7 +118,7 @@ func TestMessageToChat(t *testing.T) {
 			Message: "Hola",
 		},
 		NewChat:  true,
-		ChatName: localnet.EncodeBase64("Chat1"),
+		ChatName: pkg.EncodeBase64("Chat1"),
 	})
 	controler := localnet.NewLocalControler(rag)
 	r, err := controler.SendNewMessageToChat(
@@ -135,7 +135,7 @@ func TestMessageToChat(t *testing.T) {
 	if r.Query != "Hola 2" {
 		t.Fatalf("Query different from expected: %s\n", r.Query)
 	}
-	removeFile("../../test/" + localnet.EncodeBase64("Chat1") + ".json")
+	removeFile("../../test/" + pkg.EncodeBase64("Chat1") + ".json")
 }
 
 func TestRetrievingChatNames(t *testing.T) {
@@ -153,7 +153,7 @@ func TestRetrievingChatNames(t *testing.T) {
 					Message: "Hola",
 				},
 				NewChat:  true,
-				ChatName: localnet.EncodeBase64(chatname),
+				ChatName: pkg.EncodeBase64(chatname),
 			},
 		)
 	}
@@ -166,7 +166,7 @@ func TestRetrievingChatNames(t *testing.T) {
 		if chats[index] != chatname {
 			t.Fatalf("Failed chat name at %d: %s\n", index, chats[index])
 		}
-		removeFile(fmt.Sprintf("../../test/%s.json", localnet.EncodeBase64(chatname)))
+		removeFile(fmt.Sprintf("../../test/%s.json", pkg.EncodeBase64(chatname)))
 	}
 }
 
@@ -178,7 +178,7 @@ func TestRetrieveChat(t *testing.T) {
 			Message: "Created",
 		},
 		NewChat:  true,
-		ChatName: localnet.EncodeBase64(chatname),
+		ChatName: pkg.EncodeBase64(chatname),
 	})
 	controler := localnet.NewLocalControler(rag)
 	ch, err := controler.RetrieveChat(chatname)
@@ -194,5 +194,5 @@ func TestRetrieveChat(t *testing.T) {
 	if ch.Messages[0].Content != "Created" {
 		t.Fatalf("Invalid message content: %s\n", ch.Messages[0].Content)
 	}
-	removeFile("../../test/" + localnet.EncodeBase64("Chat1") + ".json")
+	removeFile("../../test/" + pkg.EncodeBase64("Chat1") + ".json")
 }
