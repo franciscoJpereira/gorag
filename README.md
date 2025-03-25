@@ -46,6 +46,9 @@ The config file for the system points to this Chroma instance by default.
 - :heavy_check_mark:  Possibility to run the system as either an API or TUI application based on config parameters.
 
 - :x: Knowledge base support for the TUI application
+    - :heavy_check_mark: Functionality to pick files
+    - :x: Parse text files and send them to the backend
+    - :x: Allow user to choose which KB to send a message to the LLM with
 
 - :x: Chroma DB credentials support
 
